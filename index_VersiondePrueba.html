@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kontex Game · Versión Prueba</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:12px;background:#05070c;color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes pop{0%{transform:scale(.98)}60%{transform:scale(1.015)}100%{transform:scale(1)}}
+.shake{animation:shake .28s ease}.pop{animation:pop .22s ease}
+#loaderScreen{position:fixed;inset:0;z-index:60;background:#05070c;display:none;align-items:center;justify-content:center;padding:20px;text-align:center}
+.loader-box{width:100%;max-width:310px;background:#0b101b;border:1px solid #d4af37;border-radius:18px;padding:20px 16px}
+.logo-badge{width:84px;height:84px;margin:0 auto 8px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#1e293b,#060a14 75%);border:2px solid #facc15;box-shadow:0 0 22px rgba(250,204,21,.2);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.logo-k{font-size:32px;font-weight:900;line-height:1;color:#facc15}
+.logo-ai{font-size:9px;font-weight:800;letter-spacing:1.2px;color:#34d399;margin-top:2px}
+.loader-pct{font-size:26px;font-weight:900;color:#34d399;margin:8px 0}
+.loader-track{height:9px;background:#05070c;border-radius:999px;overflow:hidden;border:1px solid #1e293b}
+.loader-fill{height:100%;width:0%;background:linear-gradient(90deg,#d4af37,#34d399)}
+.top,.card,.stat{background:#0b101b;border:1px solid #1b2538;border-radius:14px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin-bottom:8px;gap:8px}
+.brand{font-weight:900;color:#facc15;font-size:15px}
+.trial-tag{font-size:9.5px;font-weight:900;padding:3px 7px;border-radius:999px;background:rgba(56,189,248,.14);color:#7dd3fc;border:1px solid rgba(56,189,248,.4);margin-left:6px}
+.nivel-pill{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:#111b2e;color:#34d399;white-space:nowrap}
+.trial-banner{font-size:11.5px;color:#cbd5e1;background:#090f1b;border:1px dashed #26344d;border-radius:11px;padding:8px 11px;margin-bottom:10px;line-height:1.4}
+.trial-banner b{color:#facc15}
+.barra-wrap{height:9px;background:#0b101b;border:1px solid #1b2538;border-radius:999px;overflow:hidden;margin-bottom:10px}
+.barra-fill{height:100%;width:0%;background:linear-gradient(90deg,#d4af37,#34d399);transition:width .25s ease}
+.stats{display:flex;gap:8px;margin-bottom:12px}
+.stat{flex:1;padding:8px;text-align:center}.stat span{display:block;font-size:11px;color:#94a3b8}.stat b{font-size:16px;color:#facc15}
+.card{padding:14px;margin-bottom:12px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:#111b2e;color:#38bdf8;margin-bottom:9px}
+.pregunta{font-size:15px;font-weight:700;line-height:1.48;margin:0 0 12px}
+.opciones{display:flex;flex-direction:column;gap:8px}
+.op{width:100%;text-align:left;padding:11px;border-radius:11px;border:1px solid #26344d;background:#090e19;color:#f1f5f9;font-size:13.5px;line-height:1.38;cursor:pointer}
+.op.ok{background:#14532d;border-color:#22c55e;color:#fff;font-weight:700}
+.op.bad{background:#7f1d1d;border-color:#ef4444;color:#fff}
+.feedback{margin-top:12px;padding:11px;border-radius:11px;font-size:13px;line-height:1.45;background:#050810;border:1px solid #26344d}
+.resp-correcta{display:block;margin:6px 0;padding:7px 9px;border-radius:8px;background:rgba(34,197,94,.16);color:#86efac;font-weight:700}
+.btn{width:100%;margin-top:10px;padding:11px;border:none;border-radius:11px;background:linear-gradient(90deg,#d4af37,#facc15);color:#05070c;font-weight:900;font-size:14px;cursor:pointer}
+.btn-sec{background:#10192b;color:#e2e8f0;border:1px solid #24334d}
+.fin{text-align:center}.nombre-box{display:flex;gap:8px;margin-top:10px}
+.nombre-input{flex:1;padding:10px 12px;border-radius:11px;border:1px solid #26344d;background:#050810;color:#f8fafc;font-size:14px}
+.btn-mini{margin-top:0;width:auto;padding:10px 14px}.saved-note{margin-top:6px;font-size:12px;color:#34d399;min-height:16px}
+.rank-card{border-color:#d4af37;box-shadow:0 0 24px rgba(212,175,55,.14)}
+.exec-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:8px;border-bottom:1px solid #26344d}
+.exec-pill{font-size:10px;font-weight:900;letter-spacing:.6px;padding:4px 9px;border-radius:999px;background:linear-gradient(90deg,rgba(250,204,21,.22),rgba(52,211,153,.16));color:#fde047;border:1px solid rgba(250,204,21,.5)}
+table.rank-table{width:100%;border-collapse:separate;border-spacing:0 8px;font-size:12.5px}
+table.rank-table td{padding:11px;background:#090f1b;border-top:1px solid #182338;border-bottom:1px solid #182338}
+table.rank-table td:first-child{border-left:1px solid #182338;border-radius:12px 0 0 12px;width:52px}
+table.rank-table td:last-child{border-right:1px solid #182338;border-radius:0 12px 12px 0;text-align:right;font-weight:900;color:#34d399;white-space:nowrap}
+table.rank-table tr.puesto-1 td{background:linear-gradient(90deg,rgba(250,204,21,.25),rgba(20,29,48,.96));border-color:#facc15}
+table.rank-table tr.puesto-2 td{background:linear-gradient(90deg,rgba(226,232,240,.18),rgba(15,23,42,.96));border-color:#cbd5e1}
+table.rank-table tr.puesto-3 td{background:linear-gradient(90deg,rgba(245,158,11,.18),rgba(15,23,42,.96));border-color:#f59e0b}
+.rank-num{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;font-weight:900;background:#131d31}
+.puesto-1 .rank-num{background:linear-gradient(135deg,#facc15,#fef08a);color:#05070c}.puesto-2 .rank-num{background:linear-gradient(135deg,#94a3b8,#f8fafc);color:#0f172a}.puesto-3 .rank-num{background:linear-gradient(135deg,#b45309,#fbbf24);color:#05070c}
+.puesto-1 td:last-child{color:#fde047;font-size:13.5px}.puesto-2 td:last-child{color:#e2e8f0}.puesto-3 td:last-child{color:#fbbf24}
+.sub-lvl{display:block;font-size:10.5px;color:#94a3b8;margin-top:2px}
+.pos-tag{font-size:10px;font-weight:800;margin-left:5px;padding:2px 6px;border-radius:999px;background:rgba(255,255,255,.08)}
+.puesto-1 .pos-tag{background:rgba(250,204,21,.2);color:#fde047}.puesto-2 .pos-tag{background:rgba(226,232,240,.16);color:#f1f5f9}.puesto-3 .pos-tag{background:rgba(245,158,11,.2);color:#fcd34d}
+</style>
+</head>
+<body>
+<div id="loaderScreen">
+  <div class="loader-box">
+    <div class="logo-badge"><span class="logo-k">K</span><span class="logo-ai">Kontex AI</span></div>
+    <b style="color:#facc15">KONTEX GAME</b>
+    <div style="font-size:10px;color:#7dd3fc">VERSIÓN DE PRUEBA</div>
+    <div id="loaderSub" style="font-size:12px;color:#94a3b8;margin-top:4px">Cargando...</div>
+    <div id="loaderPct" class="loader-pct">0%</div>
+    <div class="loader-track"><div id="loaderFill" class="loader-fill"></div></div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:8px">Avanzando de 5 en 5%...</div>
+  </div>
+</div>
+
+<div class="top">
+  <div><span class="brand">KONTEX GAME</span><span class="trial-tag">VERSIÓN PRUEBA</span></div>
+  <span id="nivelBadge" class="nivel-pill">Etapa 1 · 1/10</span>
+</div>
+
+<div id="trialBanner" class="trial-banner"></div>
+<div class="barra-wrap"><div id="barraProgreso" class="barra-fill"></div></div>
+
+<div id="statsBar" class="stats">
+  <div class="stat"><span>Puntos</span><b id="puntosEl">0</b></div>
+  <div class="stat"><span>Racha</span><b id="rachaEl">0</b></div>
+  <div class="stat"><span>Vidas</span><b id="vidasEl">3</b></div>
+</div>
+
+<div id="juegoBox" class="card">
+  <span id="categoriaEl" class="tag">ETAPA 1</span>
+  <p id="preguntaEl" class="pregunta"></p>
+  <div id="opcionesEl" class="opciones"></div>
+  <div id="feedbackEl" class="feedback" style="display:none"></div>
+  <button id="siguienteBtn" class="btn" type="button" style="display:none" onclick="siguientePaso()">Siguiente</button>
+</div>
+
+<div id="etapa1FinBox" class="card fin" style="display:none">
+  <h2 style="margin:0;color:#34d399">¡Etapa 1 completada!</h2>
+  <p id="etapa1Resumen" style="color:#cbd5e1;font-size:13.5px;margin:8px 0 12px"></p>
+  <button class="btn" type="button" onclick="irAEtapa2()">Cargando ir a la Etapa 2</button>
+  <button class="btn btn-sec" type="button" onclick="finPartida(false)">Ver tabla de clasificación</button>
+</div>
+
+<div id="etapa2FinBox" class="card fin" style="display:none">
+  <h2 style="margin:0;color:#facc15">¡Etapa 2 completada!</h2>
+  <p id="etapa2Resumen" style="color:#cbd5e1;font-size:13.5px;margin:8px 0 12px"></p>
+  <button class="btn" type="button" onclick="finPartida(true)">Ver resultado final y tabla</button>
+</div>
+
+<div id="finBox" class="card fin" style="display:none">
+  <h2 id="finTitulo" style="margin:0;color:#facc15">¡Reto completado!</h2>
+  <span id="medallaIco" style="font-size:34px;display:block;margin:6px 0 2px">🥇</span>
+  <b id="medallaNom" style="color:#facc15;font-size:13.5px">Oro Ejecutivo</b>
+  <p id="finResumen" style="color:#cbd5e1;font-size:13.5px;margin:6px 0"></p>
+  <div class="nombre-box">
+    <input id="nombreInput" class="nombre-input" type="text" maxlength="20" placeholder="Tu nombre o firma">
+    <button class="btn btn-mini" type="button" onclick="guardarNombre()">Registrar</button>
+  </div>
+  <div id="notaGuardado" class="saved-note"></div>
+  <button class="btn btn-sec" type="button" onclick="iniciarJuego()">Jugar de nuevo desde Etapa 1</button>
+</div>
+
+<div id="rankingCard" class="card rank-card" style="display:none">
+  <div class="exec-head">
+    <b style="font-size:13px;color:#facc15">🏆 TABLA DE CLASIFICACIÓN</b>
+    <span class="exec-pill">TOP 1.° · 2.° · 3.°</span>
+  </div>
+  <div id="rankingLista"></div>
+  <button class="btn btn-sec" type="button" onclick="borrarRanking()">Limpiar tabla</button>
+</div>
+
+<script>
+const INC=["(A)","(B)","(C)","(D)"];
+const ETAPAS=[
+  {desc:"<b>Etapa 1 · Fiscal y Operación:</b> 10 casos pesados de IVA, RESICO, CFF y equilibrio.",preguntas:[
+    ["Partida Doble","Venta a crédito por $34,800 con IVA 16% incluido; devuelven $6,960 con nota de crédito y otorgan 5% de rebaja sobre venta neta. ¿Efecto principal?",["Baja $5,000 de venta y $800 de IVA a Clientes, más rebaja correspondiente","Sube $6,960 a Clientes y abona a Ventas","Cargo a Bancos por $6,960 sin afectar IVA","Abono a Capital social por $5,800"],0,"La nota de crédito revierte venta e IVA proporcionales y baja la cuenta por cobrar."],
+    ["Anticipos","Se cobran $46,400 por anticipo de contrato y al mes siguiente se entrega el pedido por $58,000 (IVA 16% incluido en ambos). ¿Saldo restante a cargo del cliente?",["$11,600.00 a cargo al devengarse la entrega total","$58,000.00 a cargo sin descontar anticipo","$46,400.00 a cargo en bancos","$0.00 hasta el año siguiente"],0,"$58,000 totales menos $46,400 cobrados por anticipo dejan $11,600.00 pendientes."],
+    ["NIF A-1","Inventario obsoleto que costó $80,000 tiene valor neto de realización de $52,000. ¿Qué procede?",["Reconocer deterioro de $28,000 para valuar a $52,000","Mantener $80,000 por negocio en marcha","Subir $28,000 al capital contable","No ajustar hasta vender en 5 años"],0,"El inventario se valúa al menor entre costo y valor neto de realización."],
+    ["IVA Desglosado","Gasto pagado por $21,344.00 con IVA 16% incluido. ¿Base gravable e IVA?",["Base $18,400.00 e IVA $2,944.00","Base $17,928.96 e IVA $3,415.04","Base $19,200.00 e IVA $2,144.00","Base $18,400.00 e IVA $3,415.04"],0,"$21,344 / 1.16 = $18,400.00 de base; 16% de $18,400 = $2,944.00 de IVA."],
+    ["IVA Acreditable","Compra de $25,000 + IVA 16%; se pagan $17,400 en total en el mes (IVA incluido) y el resto a crédito. ¿IVA acreditable del mes?",["$2,400.00 acreditables","$4,000.00 acreditables","$2,784.00 acreditables","$1,600.00 acreditables"],0,"$17,400 / 1.16 = $15,000 pagados de base; 16% de $15,000 = $2,400.00."],
+    ["IVA Neto","IVA trasladado $19,600, acreditable pagado $12,850, saldo a favor previo $3,200 y devolución de compra que baja IVA acreditable $650. ¿IVA a cargo?",["$4,200.00 a cargo","$6,750.00 a cargo","$3,550.00 a cargo","$1,000.00 a favor"],0,"Acreditable neto $12,200; $19,600 - $12,200 - $3,200 saldo a favor = $4,200 a cargo."],
+    ["RESICO","En RESICO se facturan $140,000: se cobran $62,000 en efectivo, hay pagaré a 60 días por $48,000 y $30,000 a crédito. ¿Ingreso acumulable del mes?",["$62,000.00 cobrados","$140,000.00 facturados","$110,000.00 con pagaré","$70,000.00 promedio"],0,"RESICO acumula únicamente ingresos efectivamente cobrados en el periodo."],
+    ["Devengo vs RESICO","Comisión de $50,000 devengada en diciembre y cobrada en enero. ¿Cómo impacta?",["Devengo acumula en diciembre; RESICO acumula en enero","Ambos acumulan en enero al cobrar","Ambos acumulan en diciembre al facturar","RESICO acumula en diciembre"],0,"El devengo atiende a la operación; RESICO atiende al cobro efectivo."],
+    ["CFF INPC","Impuesto omitido de $18,000 con factor de actualización de 1.025 antes de recargos. ¿Monto actualizado?",["$18,450.00","$18,000.00","$18,900.00","$17,550.00"],0,"$18,000 x 1.025 = $18,450.00 actualizado antes de calcular recargos."],
+    ["Equilibrio","Precio $1,250, costo variable $750 y costos fijos $85,000; si suben $15,000 los fijos, ¿unidades adicionales para equilibrio?",["30 unidades adicionales","20 unidades adicionales","170 unidades totales","120 unidades totales"],0,"Margen $500; pasa de 170 a 200 unidades (+30 unidades)."]
+  ]},
+  {desc:"<b>Etapa 2 · Cierre, Ajustes, Auditoría y Ética:</b> 10 casos difíciles para calar a fondo.",preguntas:[
+    ["Nómina","Nómina bruta $90,000, retenciones al trabajador $11,500 y parte patronal $16,200. ¿Gasto total de la empresa?",["$106,200.00 (sueldos + parte patronal)","$117,700.00 sumando retenciones","$90,000.00 sin parte patronal","$78,500.00 restando retenciones"],0,"Las retenciones son pasivo a enterar; el gasto de la empresa es $90,000 + $16,200."],
+    ["Ecuación Contable","Activo $520,000, pasivos totales $275,000 y capital social $160,000. ¿Utilidades retenidas / resultado?",["$85,000.00","$245,000.00","$275,000.00","$360,000.00"],0,"Capital contable $245,000 menos $160,000 de capital social = $85,000.00."],
+    ["Cierre","Pérdida neta de $45,000 más dividendos decretados de $30,000. ¿Efecto en capital contable?",["Baja $75,000.00 el capital contable","Baja $15,000.00 el capital contable","Sube $45,000.00 el capital contable","Sin efecto en capital contable"],0,"Tanto pérdida como dividendos decretados reducen el capital contable."],
+    ["Depreciación","Activo de $210,000, residual $30,000, vida útil 5 años; se vende al fin del año 3 en $110,000. ¿Valor en libros?",["$102,000.00 (ganancia de $8,000.00)","$120,000.00 (pérdida de $10,000.00)","$90,000.00 (ganancia de $20,000.00)","$210,000.00 sin depreciación"],0,"Depreciación anual $36,000; en 3 años $108,000; valor en libros $102,000.00."],
+    ["Rentas Cobradas","Cobro anticipado de $36,000 por 4 meses (nov-feb). ¿Ingreso devengado del año (nov-dic)?",["$18,000.00 (2 meses devengados)","$36,000.00 todo el cobro","-$9,000.00 solo un mes","$0.00 hasta terminar"],0,"Noviembre y diciembre son 2 de 4 meses: $36,000 / 4 x 2 = $18,000.00."],
+    ["Incobrables","Clientes $150,000, estimación previa $4,000 y nueva estimación requerida del 5% ($7,500). ¿Gasto del periodo?",["$3,500.00 de gasto por estimación","$7,500.00 de gasto","$11,500.00 sumando ambas","$4,000.00 de gasto"],0,"Solo se ajusta la diferencia para llegar a $7,500: $7,500 - $4,000 = $3,500.00."],
+    ["Control Interno","Mismo empleado autoriza compras, recibe mercancía y concilia cuentas por pagar. ¿Riesgo clave?",["Falta de segregación de funciones que facilita fraudes o errores ocultos","Exceso de pólizas archivadas","Cumplimiento estricto de entidad","Depreciación automática"],0,"Concentrar funciones rompe el control cruzado y facilita desvíos."],
+    ["Conciliación","Banco $64,000, cheques en tránsito $14,500, depósitos en tránsito $9,000 y comisión no registrada $650. ¿Saldo en bancos conciliado?",["$58,500.00 (y ajuste de -$650 en libros)","$78,500.00","$55,000.00","$64,650.00"],0,"$64,000 - $14,500 + $9,000 = $58,500.00 en bancos."],
+    ["Auditoría","Sin respuesta a circularización de saldo a un cliente, ¿qué revisión alternativa aplica el auditor?",["Cobros posteriores en bancos, remisiones, facturas y soporte","Dar por bueno el saldo sin revisar","Emitir dictamen sin evidencia","Borrar clientes del balance"],0,"Se verifican cobros posteriores y soporte documental de la operación."],
+    ["Ética Contable","Piden adelantar ingresos de enero a diciembre para cumplir metas. ¿Conducta correcta?",["Rechazarlo y registrar en el periodo en que se devenga","Aceptar si hay factura fechada en diciembre","Registrar y borrar en enero","Ocultar el contrato"],0,"La ética y el devengo exigen registrar en el periodo real."]
+  ]}
+];
+
+const RK="kontex_rank_v36";
+let etapaIdx=0,pts=0,racha=0,vidas=3,idx=0,done=false,regIdx=-1,etapaFinNum=1,busy=false;
+const esc=s=>String(s||"").replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+const leer=()=>{try{return JSON.parse(localStorage.getItem(RK)||"[]")}catch(e){return[]}};
+const guardar=l=>{try{localStorage.setItem(RK,JSON.stringify(l))}catch(e){}};
+const med=p=>p>=450?{i:"🥇",t:"Oro Ejecutivo"}:p>=250?{i:"🥈",t:"Plata Ejecutivo"}:{i:"🥉",t:"Bronce Ejecutivo"};
+const pctEtapa=()=>Math.round(((idx+(done?1:0))/10)*100);
+
+function animarCard(c){juegoBox.classList.remove("shake","pop");void juegoBox.offsetWidth;juegoBox.classList.add(c)}
+
+function carga5(sub,cb){
+  if(busy)return;busy=true;let p=0;
+  loaderSub.textContent=sub;loaderPct.textContent="0%";loaderFill.style.width="0%";loaderScreen.style.display="flex";
+  const end=()=>{if(!busy)return;busy=false;loaderPct.textContent="100%";loaderFill.style.width="100%";loaderScreen.style.display="none";cb()};
+  const tm=setInterval(()=>{p=Math.min(100,p+5);loaderPct.textContent=p+"%";loaderFill.style.width=p+"%";if(p>=100){clearInterval(tm);setTimeout(end,110)}},35);
+  setTimeout(end,1000);
+}
+
+function pintarTabla(){
+  const l=leer(),etq={1:"1.° LUGAR",2:"2.° LUGAR",3:"3.° LUGAR"};
+  if(!l.length){rankingLista.innerHTML='<div style="padding:12px;text-align:center;color:#64748b;font-size:12.5px">Sin resultados registrados todavía. ¡Sé el #1!</div>';return}
+  rankingLista.innerHTML='<table class="rank-table"><tbody>'+l.map((it,i)=>{
+    const pos=i+1,c=pos<=3?"puesto-"+pos:"",t=etq[pos]?'<span class="pos-tag">'+etq[pos]+'</span>':"";
+    return '<tr class="'+c+'"><td><span class="rank-num">#'+pos+'</span></td><td><b>'+esc(it.n)+'</b>'+t+'<span class="sub-lvl">Etapa '+it.nv+'/2 · '+esc(it.md)+'</span></td><td>'+it.p+' pts</td></tr>';
+  }).join("")+'</tbody></table>';
+}
+
+function addInit(et){
+  const m=med(pts),l=leer(),item={n:"Ejecutivo",p:pts,nv:et,md:m.i+" "+m.t};
+  l.push(item);l.sort((a,b)=>b.p-a.p||b.nv-a.nv);const top=l.slice(0,6);guardar(top);regIdx=top.indexOf(item);pintarTabla();
+}
+
+function guardarNombre(){
+  const nom=(nombreInput.value||"").trim()||"Ejecutivo";let l=leer();
+  if(regIdx<0||!l[regIdx]){const m=med(pts);l.push({n:nom,p:pts,nv:etapaFinNum,md:m.i+" "+m.t})}else{l[regIdx].n=nom}
+  l.sort((a,b)=>b.p-a.p||b.nv-a.nv);l=l.slice(0,6);guardar(l);
+  regIdx=l.findIndex(x=>x.n===nom&&x.p===pts&&x.nv===etapaFinNum);
+  pintarTabla();notaGuardado.textContent='Registrado como "'+nom+'".';
+}
+
+function pintar(){
+  done=false;feedbackEl.style.display="none";siguienteBtn.style.display="none";
+  etapa1FinBox.style.display="none";etapa2FinBox.style.display="none";
+  trialBanner.style.display="block";statsBar.style.display="flex";juegoBox.style.display="block";
+  trialBanner.innerHTML=ETAPAS[etapaIdx].desc;
+  const pr=ETAPAS[etapaIdx].preguntas[idx];
+  puntosEl.textContent=pts;rachaEl.textContent=racha;vidasEl.textContent=vidas;
+  nivelBadge.textContent="Etapa "+(etapaIdx+1)+" · "+(idx+1)+"/10";
+  barraProgreso.style.width=pctEtapa()+"%";
+  categoriaEl.textContent="ETAPA "+(etapaIdx+1)+" · "+pr[0].toUpperCase()+" · "+(idx+1)+"/10";
+  preguntaEl.textContent=pr[1];opcionesEl.innerHTML="";
+  pr[2].forEach((op,i)=>{
+    const b=document.createElement("button");b.className="op";b.type="button";
+    b.innerHTML='<b>'+INC[i]+'</b> '+esc(op);b.onclick=()=>elegir(i,b);opcionesEl.appendChild(b);
+  });
+  animarCard("pop");
+}
+
+function elegir(i,btn){
+  if(done)return;done=true;
+  const pr=ETAPAS[etapaIdx].preguntas[idx],buena=INC[pr[3]]+" "+pr[2][pr[3]],bs=opcionesEl.querySelectorAll("button");
+  bs.forEach(x=>x.disabled=true);
+  if(i===pr[3]){
+    btn.classList.add("ok");racha++;pts+=25+((racha-1)*5);
+    feedbackEl.innerHTML='<b style="color:#4ade80">¡Correcto!</b> '+esc(pr[4]);animarCard("pop");
+  }else{
+    btn.classList.add("bad");bs[pr[3]].classList.add("ok");racha=0;vidas--;
+    feedbackEl.innerHTML='<b style="color:#f87171">Incorrecto.</b><span class="resp-correcta">Respuesta correcta: '+esc(buena)+'</span><span>'+esc(pr[4])+'</span>';animarCard("shake");
+  }
+  puntosEl.textContent=pts;rachaEl.textContent=racha;vidasEl.textContent=vidas;
+  barraProgreso.style.width=pctEtapa()+"%";
+  feedbackEl.style.display="block";siguienteBtn.style.display="block";
+  siguienteBtn.textContent=vidas<=0?"Ver clasificación":(idx>=9?(etapaIdx===0?"Completar Etapa 1":"Completar Etapa 2"):"Siguiente pregunta");
+}
+
+function mostrarEtapa1Completada(){
+  barraProgreso.style.width="100%";
+  juegoBox.style.display="none";etapa1FinBox.style.display="block";
+  nivelBadge.textContent="Etapa 1 · 100%";
+  etapa1Resumen.textContent="Llevas "+pts+" puntos y "+vidas+" vidas. La barra de Etapa 1 llegó al 100% y se reiniciará al cargar la Etapa 2.";
+}
+
+function irAEtapa2(){
+  etapaIdx=1;idx=0;done=false;
+  etapa1FinBox.style.display="none";
+  barraProgreso.style.width="0%";
+  carga5("Cargando Etapa 2...",pintar);
+}
+
+function mostrarEtapa2Completada(){
+  barraProgreso.style.width="100%";
+  juegoBox.style.display="none";etapa2FinBox.style.display="block";
+  nivelBadge.textContent="Etapa 2 · 100%";
+  etapa2Resumen.textContent="Terminaste la Etapa 2 con "+pts+" puntos y "+vidas+" vidas.";
+}
+
+function finPartida(ok){
+  etapaFinNum=etapaIdx+1;
+  carga5("Actualizando tabla...",()=>{
+    addInit(etapaFinNum);const m=med(pts);
+    trialBanner.style.display="none";statsBar.style.display="none";
+    etapa1FinBox.style.display="none";etapa2FinBox.style.display="none";juegoBox.style.display="none";
+    finBox.style.display="block";rankingCard.style.display="block";
+    barraProgreso.style.width="100%";
+    nivelBadge.textContent=ok?"2 / 2 Completas":"Etapa "+etapaFinNum+" / 2";
+    finTitulo.textContent=ok?"¡Completaste las 2 etapas!":"¡Fin de la partida!";
+    medallaIco.textContent=m.i;medallaNom.textContent=m.t;
+    finResumen.textContent="Obtuviste "+pts+" puntos llegando a la Etapa "+etapaFinNum+" de 2.";
+    nombreInput.value="";notaGuardado.textContent="";
+  });
+}
+
+function siguientePaso(){
+  if(vidas<=0){finPartida(false);return}
+  if(idx>=9){
+    if(etapaIdx===0){mostrarEtapa1Completada();return}
+    mostrarEtapa2Completada();return;
+  }
+  idx++;pintar();
+}
+
+function iniciarJuego(){
+  etapaIdx=0;pts=0;racha=0;vidas=3;idx=0;done=false;regIdx=-1;etapaFinNum=1;busy=false;
+  finBox.style.display="none";rankingCard.style.display="none";etapa1FinBox.style.display="none";etapa2FinBox.style.display="none";
+  juegoBox.style.display="block";trialBanner.style.display="block";statsBar.style.display="flex";
+  barraProgreso.style.width="0%";pintarTabla();carga5("Iniciando Kontex Game...",pintar);
+}
+
+function borrarRanking(){try{localStorage.removeItem(RK)}catch(e){}regIdx=-1;pintarTabla()}
+
+iniciarJuego();
+</script>
+</body>
+</html>
